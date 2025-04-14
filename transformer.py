@@ -116,7 +116,7 @@ class TransformerBlock:
         """
         Forward pass of the transformer block
         
-        Args:
+        Input:
             hidden_states: Input tensor of shape [batch_size, seq_len, hidden_size]
             attention_mask: Attention mask
             position_ids: Position IDs for rotary embeddings
@@ -124,7 +124,7 @@ class TransformerBlock:
             output_attentions: Whether to output attention weights
             use_cache: Whether to return key/value states for generation
             
-        Returns:
+        Output:
             hidden_states: Output tensor
             present_key_value: Updated key/value states
             attention_weights: Attention weights (optional)
@@ -172,21 +172,21 @@ class LlamaMaverickModel:
     
     def __init__(
         self,
-        vocab_size: int = 32000,
-        hidden_size: int = 4096,
-        intermediate_size: int = 11008,
-        num_hidden_layers: int = 32,
-        num_attention_heads: int = 32,
-        num_key_value_heads: int = 8,
-        max_position_embeddings: int = 8192,
-        use_moe_layers: bool = True,
-        moe_intermediate_size: Optional[int] = None,
-        num_experts: int = 8,
-        num_experts_per_token: int = 2,
-        moe_layer_freq: int = 4, 
-        rms_norm_eps: float = 1e-5,
+        vocab_size: int,
+        hidden_size: int,
+        intermediate_size: int,
+        num_hidden_layers: int,
+        num_attention_heads: int,
+        num_key_value_heads: int,
+        max_position_embeddings: int,
+        use_moe_layers: bool,
+        num_experts: int,
+        num_experts_per_token: int,
+        moe_layer_freq: int, 
+        rms_norm_eps: float,
+        dropout_rate: float,
         vocab_embed_factor: Optional[float] = None,
-        dropout_rate: float = 0.0,
+        moe_intermediate_size: Optional[int] = None,
     ):
         """
         Initialize a Llama 4 Maverick model
@@ -356,11 +356,11 @@ class LlamaMaverickModel:
 def generate(
     model: LlamaMaverickModel,
     input_ids: np.ndarray,
-    max_length: int = 100,
-    temperature: float = 1.0,
-    top_k: int = 50,
-    top_p: float = 0.9,
-    repetition_penalty: float = 1.1,
+    max_length: int,
+    temperature: float,
+    top_k: int,
+    top_p: float,
+    repetition_penalty: float,
 ):
     """
     Generate text using the model with various sampling strategies
