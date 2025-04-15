@@ -11,10 +11,10 @@ class SimpleTokenizer:
         """Initialize tokenizer with larger vocabulary for transformer compatibility"""
         self.vocab_size = vocab_size
         
-        # Special token IDs
+        # Special token IDs - reserve first few tokens
+        self.pad_token_id = 0
         self.bos_token_id = 1
         self.eos_token_id = 2
-        self.pad_token_id = 0
         self.unk_token_id = 3
         
         special_tokens = {
@@ -24,9 +24,13 @@ class SimpleTokenizer:
             "<unk>": self.unk_token_id,
         }
         
-        # Character-level vocab
-        self.char_to_id = {chr(i): i for i in range(min(256, vocab_size))}
-        self.id_to_char = {i: chr(i) for i in range(min(256, vocab_size))}
+        # Start character mapping after special tokens
+        start_char_id = max(special_tokens.values()) + 1
+        max_char_id = min(vocab_size - 1, start_char_id + 255)  # Leave room for special tokens
+        
+        # Character-level vocab - map ASCII chars to IDs after special tokens
+        self.char_to_id = {chr(i): start_char_id + i for i in range(min(256, max_char_id - start_char_id + 1))}
+        self.id_to_char = {v: k for k, v in self.char_to_id.items()}
         
         # Add special tokens to vocabulary
         self.char_to_id.update(special_tokens)
@@ -72,15 +76,20 @@ class SimpleTokenizer:
         text = ""
         
         for token_id in token_ids:
+            # Skip special tokens
             if token_id in [self.bos_token_id, self.eos_token_id, self.pad_token_id]:
                 continue
+            
+            # Ensure token_id is within vocabulary range
+            if token_id >= self.vocab_size:
+                token_id = self.unk_token_id
                 
+            # Convert token to character
             if token_id in self.id_to_char:
                 text += self.id_to_char[token_id]
             else:
-                print(token_id)
                 text += self.id_to_char[self.unk_token_id]
-
+        
         return text
     
     def batch_encode(

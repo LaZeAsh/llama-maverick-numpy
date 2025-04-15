@@ -384,7 +384,7 @@ def generate(
     for _ in range(max_length):
         # Forward pass with caching
         model_outputs = model.forward(
-            input_ids=generated_ids[:, -1:],  # Only process the last token
+            input_ids=generated_ids[:, -1:],  # Only process the last token 
             past_key_values=past_key_values,
             use_cache=True,
         )
@@ -393,16 +393,21 @@ def generate(
         next_token_logits = model_outputs["logits"][:, -1, :]  # [batch_size, vocab_size]
         past_key_values = model_outputs["past_key_values"]
         
+        # Ensure logits are within vocab range
+        next_token_logits = next_token_logits[:, :model.vocab_size]
+        
         # Apply repetition penalty
         for b in range(batch_size):
             for token_id in set(generated_ids[b].tolist()):
-                next_token_logits[b, token_id] /= repetition_penalty
+                if token_id < model.vocab_size:  # Only penalize valid tokens
+                    next_token_logits[b, token_id] /= repetition_penalty
                 
         # Apply temperature
         next_token_logits = next_token_logits / temperature
         
         # Apply top-k sampling
         if top_k > 0:
+            top_k = min(top_k, model.vocab_size)  # Ensure top_k doesn't exceed vocab size
             indices_to_remove = np.zeros_like(next_token_logits, dtype=bool)
             for b in range(batch_size):
                 topk_logits, topk_indices = np.sort(next_token_logits[b])[-top_k:], np.argsort(next_token_logits[b])[-top_k:]
@@ -431,7 +436,12 @@ def generate(
         next_tokens = np.zeros(batch_size, dtype=np.int32)
         
         for b in range(batch_size):
-            next_tokens[b] = np.random.choice(probs.shape[1], p=probs[b])
+            # Ensure we only sample valid token IDs
+            valid_tokens = np.where(probs[b] > 0)[0]
+            if len(valid_tokens) > 0:
+                next_tokens[b] = np.random.choice(valid_tokens, p=probs[b, valid_tokens] / np.sum(probs[b, valid_tokens]))
+            else:
+                next_tokens[b] = 0  # Use pad token if no valid tokens found
             
         # Add the next tokens to the generated sequence
         generated_ids = np.concatenate([generated_ids, next_tokens[:, None]], axis=1)

@@ -4,8 +4,10 @@ from tokenization import SimpleTokenizer, text_generation_demo
 
 def main():
     print("Initializing Llama 4 Maverick model...")
+    # Use vocab_size of at least 256 (for ASCII) + 4 (for special tokens)
+    vocab_size = 260
     model = LlamaMaverickModel(
-        vocab_size=512,
+        vocab_size=vocab_size,
         hidden_size=768,
         intermediate_size=2048,
         num_hidden_layers=12,
@@ -20,8 +22,8 @@ def main():
         rms_norm_eps=1e-5
     )
     
-    # Create a simple tokenizer
-    tokenizer = SimpleTokenizer(vocab_size=512)  # Match model vocab size
+    # Create a simple tokenizer with matching vocab size
+    tokenizer = SimpleTokenizer(vocab_size=vocab_size)
     
     # Standard forward pass example
     input_text = "Hello, world!"
